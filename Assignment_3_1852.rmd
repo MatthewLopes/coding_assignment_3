@@ -1,0 +1,149 @@
+---
+title: "Coding Assignment 3"
+output: html_notebook
+---
+### Matthew Lopes: mlopes2
+### Jack Kovach : jkovach2
+### UIN Used: Kovach - 662871852
+
+```{r}
+library(splines)
+library(stats)
+help(smooth.spline)
+options(digits = 4)
+```
+
+### Part I: Optimal Span for loess
+
+#### Prepare your function
+
+```{r}
+lo.lev <- function(x1, sp){
+  # x1: n-by-1 feature vector
+  # sp: a numerical value for "span"
+  
+  n = length(x1);
+  lev = rep(0, n)
+  
+  ##############################################
+  # YOUR CODE: Compute the diagonal entries of the 
+  #            smoother matrix S and 
+  #            store it in a vector "lev"
+  # Tip: check how we compute the smoother matrix
+  #      for smoothing spline models
+  ##############################################
+  
+  # return the smoother matrix with knots x and degree of freedom = sp
+  # this function is for x having unique values
+  n = length(x1);
+  A = matrix(0, n, n);
+  for(i in 1:n){
+       y = rep(0, n); y[i]=1;
+       yi = loess.smooth(x, y, span=sp)$y;
+       A[,i]= yi;
+       }
+  
+  lev = diag(A)
+  return(lev)
+}
+
+onestep_CV <- function(x1, y1, sp){
+  
+  ##############################################
+  #  YOUR CODE: 
+  #  1) Fit a loess model y1 ~ x1 with span = sp, and extract 
+  #     the corresponding residual vector
+  #  2) Call lo.lev to obtain the diagonal entries of S
+  #  3) Compute LOO-CV and GCV
+  ##############################################
+  
+  
+  
+  mod_loess = loess(y1 ~ x1, span=sp, 
+                    control = loess.control(surface = "direct"))
+  
+  loess_resids = residuals(mod_loess)
+  
+  lo_lev = lo.lev(x1, sp)
+  
+  n = length(lo_lev)
+  cv = c()
+  
+  #########################
+  ## CHOICE OF LAMBDA #####
+  #############################
+  for(i in 1:n){
+    cv_i = (y1[i]-loess_resids[i])/(1-lo_lev[i])
+    cv <- c(cv, cv_i)
+  }
+  #############################
+  
+  return(list(cv = cv, gcv = gcv))
+}
+
+myCV <- function(x1, y1, span){
+  # x1: feature vector of length n
+  # y1: response vector of length n
+  # span: a sequence of values for "span"
+  
+  m = length(span)
+  cv = rep(0, m)
+  gcv = rep(0, m)
+  
+  for(i in 1:m){
+    tmp = onestep_CV(x1, y1, span[i])
+    cv[i] = tmp$cv
+    gcv[i] = tmp$gcv
+  }
+  return(list(cv = cv, gcv = gcv))
+}
+```
+
+#### Test your function
+
+```{r}
+coding3_data = read.csv("./data/Coding3_Data.csv", header = TRUE)
+dim(coding3_data)
+plot(coding3_data$x, coding3_data$y, xlab="", ylab="")
+```
+
+```{r}
+span1 = seq(from = 0.2, by = 0.05, length = 15 )
+cv.out = myCV(coding3_data$x, coding3_data$y, span1)
+```
+
+#### Print out your results
+
+```{r}
+myout = data.frame(CV = cv.out$cv, 
+                   GCV = cv.out$gcv, 
+                   span = span1)
+myout$span[myout$GCV == min(myout$GCV)]
+myout$span[myout$CV == min(myout$CV)]
+myout
+```
+
+#### Plot the fitted curve
+
+```{r}
+spangcv.min = 0.5
+plot(coding3_data$x, coding3_data$y, xlab="", ylab="", col="gray");
+fx = 1:50/50;
+fy = sin(12*(fx+0.2))/(fx+0.2)
+lines(fx, fy, col=8, lwd=2);
+f = loess(y ~ x, coding3_data, span = spangcv.min)
+lines(fx, predict(f, data.frame(x = fx), surface = "direct"), 
+      lty=2, lwd=2, col="blue")
+```
+
+### Part II
+
+```{r}
+set.seed(XXXX) 
+mydata = read.csv("./data/Sales_Transactions_Dataset_Weekly.csv")
+ts = as.matrix(mydata[, 2:53])
+row.names(ts) = mydata[,1]
+ts = ts - rowMeans(ts)
+```
+
+
