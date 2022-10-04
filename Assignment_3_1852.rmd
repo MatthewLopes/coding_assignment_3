@@ -90,11 +90,6 @@ myCV <- function(x1, y1, span){
 ```
 
 #### Test your function
-```{r}
-span1 = seq(from = 0.2, by = 0.05, length = 15 )
-cv.out = myCV(coding3_data$x, coding3_data$y, span1)
-```
-
 
 ```{r}
 coding3_data = read.csv("./data/Coding3_Data.csv", header = TRUE)
@@ -102,6 +97,11 @@ dim(coding3_data)
 plot(coding3_data$x, coding3_data$y, xlab="", ylab="")
 ```
 
+```{r}
+span1 = seq(from = 0.2, by = 0.05, length = 15 )
+cv.out = myCV(coding3_data$x, coding3_data$y, span1)
+print(cv.out)
+```
 
 
 #### Print out your results
@@ -130,12 +130,59 @@ lines(fx, predict(f, data.frame(x = fx), surface = "direct"),
 
 ### Part II
 
+#### Remove Mean and Store Data as X
 ```{r}
-set.seed(XXXX) 
+set.seed(1852) 
 mydata = read.csv("./data/Sales_Transactions_Dataset_Weekly.csv")
 ts = as.matrix(mydata[, 2:53])
 row.names(ts) = mydata[,1]
-ts = ts - rowMeans(ts)
+X = ts - rowMeans(ts)
+```
+
+#### Natural Cubic Spline with DF = 10 
+```{r}
+F = ns(X, df=10, intercept = FALSE) 
+dim(F)
+```
+
+```{r}
+
+# 52 by 9 Design Matrix
+
+
+#F = #natural cubic spline 1:52 - converted from the time one
+  # we do not not care about intercept so need to remove the column mean
+# dim(F[,0])
+  
+  #coefficients is DF minus 1
+  # imagine F is X and X is Y
+  #just like how you get coefficients for linear regression
+
+#X is the response not the predictor
+#811 responses = X1 Y1to Y 811
+# each row is a a reponse, what we want to predict, not input of the ns 
+#input is just time
+#811 time series
+#predictor is T = 1:52 
+#use T to predict X. each row of X put on Y axis and T you put on X axis
+# for each of these scatter plots build a natural cubic spline to make a prediction on each row of X matrix
+
+# for(i in 1:52){
+#   F[i] = ns(X[,i],df=10)
+# }
+# dim(F)
+
+
+#Remove column mean F
+
+# F = F - colMeans(F)
+# dim(F)
+# 
+# B_tp = (t(F)%*%F)^(-1)%*%t(F)#*t(X)
+# print(dim(B_tp))
+# 
+# B = t(B_tp)
+
 ```
 
 
