@@ -141,9 +141,48 @@ X = ts - rowMeans(ts)
 
 #### Natural Cubic Spline with DF = 10 
 ```{r}
-F = ns(X, df=10, intercept = FALSE) 
-dim(F)
+x=seq(0,1,length.out=ncol(X))
+
+F = ns(x, df=9, intercept = FALSE) 
+# tmp = F
+# cms = colMeans(F)
+
+F = t(t(F) - colMeans(F))
+
+B_tp = solve(t(F)%*%F)%*%t(F)%*%t(X)
+
+B = t(B_tp)
+
 ```
+
+#### Run the K Means
+
+```{r}
+km_B = kmeans(B, centers = 6)
+```
+
+```{r}
+clusters = km_B$cluster
+centers = km_B$centers
+
+par(mfrow=c(2,3))  
+
+for(i in 1:6){
+  timeseries = F%*%centers[i,]
+  plot(timeseries, main=paste("Timeseries",i), xlim = )  # 52 length vectors
+}
+
+
+
+```
+
+
+
+
+
+
+
+
 
 ```{r}
 
