@@ -9,6 +9,7 @@ output: html_notebook
 ```{r}
 library(splines)
 library(stats)
+library(ggplot2)
 options(digits = 4)
 ```
 
@@ -169,59 +170,70 @@ par(mfrow=c(2,3))
 
 for(i in 1:6){
   timeseries = F%*%centers[i,]
-  plot(timeseries, main=paste("Timeseries",i), xlim = )  # 52 length vectors
+  #ggplot(timeseries, main=paste("Timeseries",i))  # 52 length vectors
+  ggplot(timeseries, aes(x="Weeks",y="Weekly Sales"))
 }
 
 
+## gg plot
+## check the plot for mean zero and if it does not , make sure it does
+#scale will look like the scale 
+## -6 to 6 because it plotting just mean
+## 3 sigma error and band will 
 
 ```
 
+### Part III Ridgeless and Double Descent
+
+```{r}
+myData3 = read.csv("./data/Coding3_dataH.csv", header=FALSE)
+dim(myData3)
+```
+#### Ridgeless
+
+```{r}
+ridgeless = function(train, test, eps = 1e-10){
+  Xtrain = train[, -1]
+  Ytrain = train[, 1]
+  Xtest = test[, -1]
+  Ytest  = test[, 1]
+  
+  # Xtrain = scale(Xtrain, center = TRUE, scale = FALSE)
+  # Xmean = attr(Xtrain, "scaled:center")
+  # Xtest = scale(Xtest, Xmean, scale = FALSE)
+  
+  ##############################################
+  # Your code for computing Ytrain.hat and Ytest.hat
+  ##########################################
+  
+  pca_train = prcomp(Xtrain, center = TRUE, scale = FALSE)
+  F1_train = Xtrain %*% pca_train$rotation
+  
+  pca_test = prcomp(Xtest, center = TRUE, scale = FALSE)
+  F1_test = Xtest %*% pca_test$rotation
+  
+  regression_train = solve(t(F1_train)%*%F1_train)%*%t(F1_train)%*%t(Ytrain)
+  
+  Ytrain.hat = F1_train%*%regression_train
+  Ytest.hat = F1_test%*%regression_train
+  
+  return(list(
+    train.err = mean((Ytrain - Ytrain.hat)^2), 
+    test.err = mean ((Ytest - Ytest.hat)^2)
+  ))
+}
+```
 
 
-
-
-
-
-
+#### Simulation Study
 
 ```{r}
 
-# 52 by 9 Design Matrix
-
-
-#F = #natural cubic spline 1:52 - converted from the time one
-  # we do not not care about intercept so need to remove the column mean
-# dim(F[,0])
-  
-  #coefficients is DF minus 1
-  # imagine F is X and X is Y
-  #just like how you get coefficients for linear regression
-
-#X is the response not the predictor
-#811 responses = X1 Y1to Y 811
-# each row is a a reponse, what we want to predict, not input of the ns 
-#input is just time
-#811 time series
-#predictor is T = 1:52 
-#use T to predict X. each row of X put on Y axis and T you put on X axis
-# for each of these scatter plots build a natural cubic spline to make a prediction on each row of X matrix
-
-# for(i in 1:52){
-#   F[i] = ns(X[,i],df=10)
-# }
-# dim(F)
-
-
-#Remove column mean F
-
-# F = F - colMeans(F)
-# dim(F)
-# 
-# B_tp = (t(F)%*%F)^(-1)%*%t(F)#*t(X)
-# print(dim(B_tp))
-# 
-# B = t(B_tp)
-
 ```
+
+
+
+
+
 
 
