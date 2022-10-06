@@ -10,6 +10,7 @@ output: html_notebook
 library(splines)
 library(stats)
 library(ggplot2)
+library(ggpubr)
 options(digits = 4)
 ```
 
@@ -166,13 +167,58 @@ km_B = kmeans(B, centers = 6)
 clusters = km_B$cluster
 centers = km_B$centers
 
-par(mfrow=c(2,3))  
+par(mfrow=c(2,3))
 
-for(i in 1:6){
-  timeseries = F%*%centers[i,]
-  #ggplot(timeseries, main=paste("Timeseries",i))  # 52 length vectors
-  ggplot(timeseries, aes(x="Weeks",y="Weekly Sales"))
+plot1 = 0
+plot2 = 0
+plot3 = 0
+plot4 = 0
+plot5 = 0
+plot6 = 0
+
+for (i in 1:6){
+  
+  cluster = which(clusters==i)
+  week_numbers = c()
+  weekly_sales = c()
+  
+  for (j in 1:length(cluster)){
+    val = cluster[j]
+    weekly_sales = c(weekly_sales, c(X[j,]))
+    week_numbers = c(week_numbers, c(1:52))
+  }
+  
+  df = data.frame(week_number = week_numbers, timeseries = weekly_sales)
+  
+  if(i==1){
+    plot1 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+  }
+  if(i==2){
+    plot2 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+  }
+  if(i==3){
+    plot3 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+  }
+  if(i==4){
+    plot4 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+  }
+  if(i==5){
+    plot5 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+  }
+  if(i==6){
+    plot6 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+  }
 }
+
+
+
+ggarrange(plot1,plot2,plot3,plot4,plot5,plot6, labels = c("Plot1","Plot2","Plot3","Plot4","Plot5", "Plot6"), ncol = 3, nrow = 2)
+
+# for(i in 1:6){
+#   timeseries = F%*%centers[i,]
+#   #ggplot(timeseries, main=paste("Timeseries",i))  # 52 length vectors
+#   ggplot(timeseries, aes(x="Weeks",y="Weekly Sales"))
+# }
 
 
 ## gg plot
