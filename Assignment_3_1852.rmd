@@ -227,6 +227,12 @@ ggarrange(plot1,plot2,plot3,plot4,plot5,plot6, labels = c("Plot1","Plot2","Plot3
 ## -6 to 6 because it plotting just mean
 ## 3 sigma error and band will 
 
+#for loop and adds one regression 
+
+#plot.ts
+#for loop and add 1 to each layer
+#for loop each time plot X against y yhat onto that plot
+
 ```
 
 ### Part III Ridgeless and Double Descent
@@ -251,17 +257,28 @@ ridgeless = function(train, test, eps = 1e-10){
   ##############################################
   # Your code for computing Ytrain.hat and Ytest.hat
   ##########################################
+  Xtrain = t(t(Xtrain) - colMeans(Xtrain))
+  # Xtest = t(t(Xtest) - colMeans(Xtest))
   
-  pca_train = prcomp(Xtrain, center = TRUE, scale = FALSE)
-  F1_train = Xtrain %*% pca_train$rotation
+  # pca_train = prcomp(Xtrain, center = TRUE, scale = FALSE, tol = eps)
+  pca_train = prcomp(Xtrain, center = FALSE, scale = FALSE, tol = eps)
+
+  intercept_ = mean(Ytrain)
   
-  pca_test = prcomp(Xtest, center = TRUE, scale = FALSE)
-  F1_test = Xtest %*% pca_test$rotation
+  F1_train = Xtrain%*%pca_train$rotation
+
+  # F1_train = Xtrain%*%pca_train$rotation 
   
-  regression_train = solve(t(F1_train)%*%F1_train)%*%t(F1_train)%*%t(Ytrain)
+  F1_test = Xtest%*%pca_train$rotation
   
-  Ytrain.hat = F1_train%*%regression_train
-  Ytest.hat = F1_test%*%regression_train
+  # print(dim(solve(t(F1_train)%*%F1_train)))
+  # print(dim(t(F1_train)))
+  # print(dim(t(Ytrain)))
+  regression_train = t(F1_train) %*% Ytrain/colSums(F1_train ^ 2)
+  # regression_train = solve(t(F1_train)%*%F1_train)%*%t(F1_train)%*%Ytrain
+  
+  Ytrain.hat = F1_train%*%regression_train + intercept_
+  Ytest.hat = F1_test%*%regression_train + intercept_
   
   return(list(
     train.err = mean((Ytrain - Ytrain.hat)^2), 
@@ -270,16 +287,84 @@ ridgeless = function(train, test, eps = 1e-10){
 }
 ```
 
+```{r}
+ridgeless2 = function(train, test, eps = 1e-10){
+  
+  Xtrain = train[, -1]
+  Ytrain = train[, 1]
+  Xtest = test[, -1]
+  Ytest  = test[, 1]
+  
+  
+  pca_res = prcomp(Xtrain, center = TRUE, scale = FALSE, tol =eps)
+  new_Xtrain = predict(pca_res,newdata = Xtrain)
+  
+  intercept_ = mean(Ytrain)
+  A_hat = t(new_Xtrain) %*% Ytrain/colSums(new_Xtrain ^ 2)
+  Ytrain.hat = new_Xtrain %*% A_hat + intercept_
+  
+  new_Xtest = predict(pca_res,newdata=Xtest)
+  
+  Ytest.hat = new_Xtest %*% A_hat + intercept_
+  
+  return(list(
+    train.err = mean((Ytrain - Ytrain.hat)^2), 
+    test.err = mean ((Ytest - Ytest.hat)^2)
+  ))
+  
+}
+```
 
 #### Simulation Study
 
 ```{r}
 
+T = 30
+n = 506 # from the mydata3
+ntest = round(n * 0.75)  # test set size
+ntrain = n - ntest  # training set size
+num_sim_iters = T
+all.test.id = matrix(0, ntest, num_sim_iters)
+test_errs = matrix(0,T,236)
+
+log_meds = c()
+
+  
+for(t in 1:num_sim_iters){
+  
+  test.id = sample(1:n, ntest)
+  train = as.matrix(myData3[-test.id,])
+  test = as.matrix(myData3[test.id,])
+  
+  # print(train)
+  # print(test)
+  
+  for (d in 6:241){
+    train_subset = train[,1:d]
+    test_subset = test[,1:d]
+    model = ridgeless(train_subset,test_subset)
+    test_errs[t,d-5] = model$test.err
+  }
+
+}
+
+for (d in 6:241){
+  log_med_curr = log(median(test_errs[,d-5]))
+  log_meds = c(log_meds, log_med_curr)
+}
+
+plot(6:241,log_meds)
+
+
 ```
 
 
+```{r}
+full_model_mspe = function(myData, i, all.test.id){
+  test.id = all.test.id[, i] 
+  full.model = lm(Y ~ ., data = myData[-test.id, ])
+  Ytest.pred = predict(full.model, newdata = myData[test.id, ])
+  mean((myData$Y[test.id] - Ytest.pred)^2)
+}
 
-
-
-
-
+```
