@@ -258,7 +258,7 @@ ridgeless = function(train, test, eps = 1e-10){
   # Your code for computing Ytrain.hat and Ytest.hat
   ##########################################
   Xtrain = t(t(Xtrain) - colMeans(Xtrain))
-  # Xtest = t(t(Xtest) - colMeans(Xtest))
+  Xtest = t(t(Xtest) - colMeans(Xtrain))
   
   # pca_train = prcomp(Xtrain, center = TRUE, scale = FALSE, tol = eps)
   pca_train = prcomp(Xtrain, center = FALSE, scale = FALSE, tol = eps)
