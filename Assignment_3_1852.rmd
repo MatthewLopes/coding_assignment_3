@@ -2,8 +2,9 @@
 title: "Coding Assignment 3"
 output: html_notebook
 ---
-### Matthew Lopes: mlopes2
 ### Jack Kovach : jkovach2
+### Spencer Buja: cbuja2
+### Matthew Lopes: mlopes2
 ### UIN Used: Kovach - 662871852
 
 ```{r}
@@ -11,7 +12,8 @@ library(splines)
 library(stats)
 library(ggplot2)
 library(ggpubr)
-options(digits = 4)
+library(caTools)
+options(digits = 7)
 ```
 
 ### Part I: Optimal Span for loess
@@ -64,7 +66,7 @@ onestep_CV <- function(x1, y1, sp){
   lo_lev = lo.lev(x1, sp)
   
   n = length(lo_lev)
-  
+
   cv = (1/n)*sum(((loess_resids)/(1-lo_lev))^2)
   gcv = (1/n)*sum(((loess_resids)/(1-(1/n)*(sum(lo_lev))))^2)
  
@@ -104,7 +106,6 @@ span1 = seq(from = 0.2, by = 0.05, length = 15 )
 cv.out = myCV(coding3_data$x, coding3_data$y, span1)
 print(cv.out)
 ```
-
 
 #### Print out your results
 
@@ -146,8 +147,6 @@ X = ts - rowMeans(ts)
 x=seq(0,1,length.out=ncol(X))
 
 F = ns(x, df=9, intercept = FALSE) 
-# tmp = F
-# cms = colMeans(F)
 
 F = t(t(F) - colMeans(F))
 
@@ -168,6 +167,88 @@ km_B = kmeans(B, centers = 6)
 ```{r}
 clusters = km_B$cluster
 centers = km_B$centers
+
+par(mfrow=c(2,3))
+
+plot1 = 0
+plot2 = 0
+plot3 = 0
+plot4 = 0
+plot5 = 0
+plot6 = 0
+
+for (i in 1:6){
+  
+  cluster = which(clusters==i)
+  weekly_sales = matrix(0,52,length(cluster))
+  
+  for (j in 1:length(cluster)){
+    weekly_sales[,j] = X[j,]
+  }
+  
+  df = as.data.frame(weekly_sales)
+  
+  if(i==1){
+
+    plot1 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(F%*%centers[i,], type = "l", col = 2, lwd = 2, lty = 1)
+  }
+  
+  if(i==2){
+
+    plot2 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(F%*%centers[i,], type = "l", col = 2, lwd = 2, lty = 1)
+  }
+  
+  if(i==3){
+
+    plot3 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(F%*%centers[i,], type = "l", col = 2, lwd = 2, lty = 1)
+  }
+  
+  if(i==4){
+
+    plot4 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(F%*%centers[i,], type = "l", col = 2, lwd = 2, lty = 1)
+  }
+  
+  if(i==5){
+
+    plot5 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(F%*%centers[i,], type = "l", col = 2, lwd = 2, lty = 1)
+  }
+  
+  if(i==6){
+
+    plot6 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(F%*%centers[i,], type = "l", col = 2, lwd = 2, lty = 1)
+  }
+  
+}
+
+```
+
+#### Clutering with X
+
+```{r}
+km_X = kmeans(X, centers = 6)
+```
+
+```{r}
+clusters = km_X$cluster
+centers = km_X$centers
 
 par(mfrow=c(2,3))
 
@@ -241,20 +322,14 @@ for (i in 1:6){
 
 ```
 
-#### Clutering with X
-
-```{r}
-km_X = kmeans(X, centers = 6)
-```
-
-
-
 ### Part III Ridgeless and Double Descent
 
 ```{r}
+set.seed(1852) 
 myData3 = read.csv("./data/Coding3_dataH.csv", header=FALSE)
 dim(myData3)
 ```
+
 #### Ridgeless
 
 ```{r}
@@ -264,32 +339,22 @@ ridgeless = function(train, test, eps = 1e-10){
   Xtest = test[, -1]
   Ytest  = test[, 1]
   
-  # Xtrain = scale(Xtrain, center = TRUE, scale = FALSE)
-  # Xmean = attr(Xtrain, "scaled:center")
-  # Xtest = scale(Xtest, Xmean, scale = FALSE)
-  
   ##############################################
   # Your code for computing Ytrain.hat and Ytest.hat
   ##########################################
+  
   Xtrain = t(t(Xtrain) - colMeans(Xtrain))
   Xtest = t(t(Xtest) - colMeans(Xtrain))
   
-  # pca_train = prcomp(Xtrain, center = TRUE, scale = FALSE, tol = eps)
   pca_train = prcomp(Xtrain, center = FALSE, scale = FALSE, tol = eps)
 
   intercept_ = mean(Ytrain)
   
   F1_train = Xtrain%*%pca_train$rotation
-
-  # F1_train = Xtrain%*%pca_train$rotation 
   
   F1_test = Xtest%*%pca_train$rotation
   
-  # print(dim(solve(t(F1_train)%*%F1_train)))
-  # print(dim(t(F1_train)))
-  # print(dim(t(Ytrain)))
   regression_train = t(F1_train) %*% Ytrain/colSums(F1_train ^ 2)
-  # regression_train = solve(t(F1_train)%*%F1_train)%*%t(F1_train)%*%Ytrain
   
   Ytrain.hat = F1_train%*%regression_train + intercept_
   Ytest.hat = F1_test%*%regression_train + intercept_
@@ -298,34 +363,6 @@ ridgeless = function(train, test, eps = 1e-10){
     train.err = mean((Ytrain - Ytrain.hat)^2), 
     test.err = mean ((Ytest - Ytest.hat)^2)
   ))
-}
-```
-
-```{r}
-ridgeless2 = function(train, test, eps = 1e-10){
-  
-  Xtrain = train[, -1]
-  Ytrain = train[, 1]
-  Xtest = test[, -1]
-  Ytest  = test[, 1]
-  
-  
-  pca_res = prcomp(Xtrain, center = TRUE, scale = FALSE, tol =eps)
-  new_Xtrain = predict(pca_res,newdata = Xtrain)
-  
-  intercept_ = mean(Ytrain)
-  A_hat = t(new_Xtrain) %*% Ytrain/colSums(new_Xtrain ^ 2)
-  Ytrain.hat = new_Xtrain %*% A_hat + intercept_
-  
-  new_Xtest = predict(pca_res,newdata=Xtest)
-  
-  Ytest.hat = new_Xtest %*% A_hat + intercept_
-  
-  return(list(
-    train.err = mean((Ytrain - Ytrain.hat)^2), 
-    test.err = mean ((Ytest - Ytest.hat)^2)
-  ))
-  
 }
 ```
 
@@ -350,9 +387,6 @@ for(t in 1:num_sim_iters){
   train = as.matrix(myData3[-test.id,])
   test = as.matrix(myData3[test.id,])
   
-  # print(train)
-  # print(test)
-  
   for (d in 6:241){
     train_subset = train[,1:d]
     test_subset = test[,1:d]
@@ -368,6 +402,5 @@ for (d in 6:241){
 }
 
 plot(6:241,log_meds)
-
 
 ```
