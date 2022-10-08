@@ -163,6 +163,8 @@ B = t(B_tp)
 km_B = kmeans(B, centers = 6)
 ```
 
+#### Clutering with B
+
 ```{r}
 clusters = km_B$cluster
 centers = km_B$centers
@@ -179,61 +181,73 @@ plot6 = 0
 for (i in 1:6){
   
   cluster = which(clusters==i)
-  week_numbers = c()
-  weekly_sales = c()
+  weekly_sales = matrix(0,52,length(cluster))
   
   for (j in 1:length(cluster)){
-    val = cluster[j]
-    weekly_sales = c(weekly_sales, c(X[j,]))
-    week_numbers = c(week_numbers, c(1:52))
+    weekly_sales[,j] = X[j,]
   }
   
-  df = data.frame(week_number = week_numbers, timeseries = weekly_sales)
+  df = as.data.frame(weekly_sales)
   
   if(i==1){
-    plot1 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+
+    plot1 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(rowMeans(df), type = "l", col = 2, lwd = 2, lty = 1)
   }
+  
   if(i==2){
-    plot2 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+
+    plot2 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(rowMeans(df), type = "l", col = 2, lwd = 2, lty = 1)
   }
+  
   if(i==3){
-    plot3 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+
+    plot3 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(rowMeans(df), type = "l", col = 2, lwd = 2, lty = 1)
   }
+  
   if(i==4){
-    plot4 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+
+    plot4 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(rowMeans(df), type = "l", col = 2, lwd = 2, lty = 1)
   }
+  
   if(i==5){
-    plot5 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+
+    plot5 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(rowMeans(df), type = "l", col = 2, lwd = 2, lty = 1)
   }
+  
   if(i==6){
-    plot6 = ggplot(df, aes(week_number, timeseries)) + geom_smooth()
+
+    plot6 = matplot(df, type = "l",col = "#B3B3B3",
+                    pch=20, xlab = "Weeks", ylab="Weekly Sales")
+    
+    matlines(rowMeans(df), type = "l", col = 2, lwd = 2, lty = 1)
   }
+  
 }
 
-
-
-ggarrange(plot1,plot2,plot3,plot4,plot5,plot6, labels = c("Plot1","Plot2","Plot3","Plot4","Plot5", "Plot6"), ncol = 3, nrow = 2)
-
-# for(i in 1:6){
-#   timeseries = F%*%centers[i,]
-#   #ggplot(timeseries, main=paste("Timeseries",i))  # 52 length vectors
-#   ggplot(timeseries, aes(x="Weeks",y="Weekly Sales"))
-# }
-
-
-## gg plot
-## check the plot for mean zero and if it does not , make sure it does
-#scale will look like the scale 
-## -6 to 6 because it plotting just mean
-## 3 sigma error and band will 
-
-#for loop and adds one regression 
-
-#plot.ts
-#for loop and add 1 to each layer
-#for loop each time plot X against y yhat onto that plot
-
 ```
+
+#### Clutering with X
+
+```{r}
+km_X = kmeans(X, centers = 6)
+```
+
+
 
 ### Part III Ridgeless and Double Descent
 
@@ -355,16 +369,5 @@ for (d in 6:241){
 
 plot(6:241,log_meds)
 
-
-```
-
-
-```{r}
-full_model_mspe = function(myData, i, all.test.id){
-  test.id = all.test.id[, i] 
-  full.model = lm(Y ~ ., data = myData[-test.id, ])
-  Ytest.pred = predict(full.model, newdata = myData[test.id, ])
-  mean((myData$Y[test.id] - Ytest.pred)^2)
-}
 
 ```
