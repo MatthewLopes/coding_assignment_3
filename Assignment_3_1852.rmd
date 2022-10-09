@@ -1,6 +1,8 @@
 ---
 title: "Coding Assignment 3"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 ### Jack Kovach : jkovach2
 ### Spencer Buja: cbuja2
